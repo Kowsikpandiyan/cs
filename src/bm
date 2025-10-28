@@ -1,0 +1,152 @@
+import React, { useState } from "react";
+
+function App() {
+  const [unit, setUnit] = useState("metric"); // metric or imperial
+  const [weight, setWeight] = useState(70);
+  const [height, setHeight] = useState(170);
+  const [bmi, setBmi] = useState(null);
+  const [message, setMessage] = useState("");
+
+  const calculateBMI = (e) => {
+    e.preventDefault();
+
+    const w = parseFloat(weight);
+    const h = parseFloat(height);
+
+    if (!isFinite(w) || !isFinite(h) || w <= 0 || h <= 0) {
+      setBmi(null);
+      setMessage("Please enter valid positive numbers for weight and height.");
+      return;
+    }
+
+    let bmiValue;
+    if (unit === "metric") {
+      const meters = h / 100;
+      bmiValue = w / (meters * meters);
+    } else {
+      bmiValue = (703 * w) / (h * h);
+    }
+
+    const rounded = Math.round(bmiValue * 10) / 10;
+    setBmi(rounded);
+    setMessage(getCategory(rounded));
+  };
+
+  const getCategory = (value) => {
+    if (value < 18.5) return "Underweight";
+    if (value < 25) return "Normal weight";
+    if (value < 30) return "Overweight";
+    return "Obesity";
+  };
+
+  const resetForm = () => {
+    setWeight(unit === "metric" ? 70 : 154);
+    setHeight(unit === "metric" ? 170 : 67);
+    setBmi(null);
+    setMessage("");
+  };
+
+  const onUnitChange = (nextUnit) => {
+    if (nextUnit === unit) return;
+
+    if (nextUnit === "imperial") {
+      setWeight((prev) => Math.round(prev * 2.20462));
+      setHeight((prev) => Math.round(prev / 2.54));
+    } else {
+      setWeight((prev) => Math.round(prev / 2.20462));
+      setHeight((prev) => Math.round(prev * 2.54));
+    }
+
+    setUnit(nextUnit);
+    setBmi(null);
+    setMessage("");
+  };
+
+  return (
+    <main>
+      <h1>BMI Calculator</h1>
+
+      <form onSubmit={calculateBMI}>
+        <fieldset>
+          <legend>Units</legend>
+          <label>
+            <input
+              type="radio"
+              name="unit"
+              value="metric"
+              checked={unit === "metric"}
+              onChange={() => onUnitChange("metric")}
+            />
+            Metric (kg, cm)
+          </label>
+          <label style={{ marginLeft: 12 }}>
+            <input
+              type="radio"
+              name="unit"
+              value="imperial"
+              checked={unit === "imperial"}
+              onChange={() => onUnitChange("imperial")}
+            />
+            Imperial (lbs, in)
+          </label>
+        </fieldset>
+
+        <div>
+          <label>
+            Weight ({unit === "metric" ? "kg" : "lbs"})
+            <br />
+            <input
+              type="number"
+              inputMode="decimal"
+              step="any"
+              min="0"
+              value={weight}
+              onChange={(e) => setWeight(e.target.value)}
+              required
+            />
+          </label>
+        </div>
+
+        <div style={{ marginTop: 8 }}>
+          <label>
+            Height ({unit === "metric" ? "cm" : "in"})
+            <br />
+            <input
+              type="number"
+              inputMode="decimal"
+              step="any"
+              min="0"
+              value={height}
+              onChange={(e) => setHeight(e.target.value)}
+              required
+            />
+          </label>
+        </div>
+
+        <div style={{ marginTop: 12 }}>
+          <button type="submit">Calculate BMI</button>
+          <button type="button" onClick={resetForm} style={{ marginLeft: 8 }}>
+            Reset
+          </button>
+        </div>
+      </form>
+
+      <section style={{ marginTop: 18 }} aria-live="polite">
+        {bmi !== null ? (
+          <div>
+            <h2>Your BMI: {bmi}</h2>
+            <p>{message}</p>
+            <p>
+              Categories: Underweight (&lt;18.5), Normal (18.5–24.9), Overweight
+              (25–29.9), Obesity (30+)
+            </p>
+          </div>
+        ) : (
+          message && <p>{message}</p>
+        )}
+      </section>
+    </main>
+  );
+}
+
+export default App;
